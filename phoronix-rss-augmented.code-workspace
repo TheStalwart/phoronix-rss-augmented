@@ -1,0 +1,28 @@
+{
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "files.eol": "\n",
+    "editor.formatOnSave": true,
+    "[jsonc]": {
+      "editor.tabSize": 2,
+      "editor.defaultFormatter": "vscode.html-language-features"
+    }
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Python Debugger: No arguments",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "phoronix-rss-augmented.py",
+        "console": "integratedTerminal",
+        "args": []
+      }
+    ]
+  }
+}
