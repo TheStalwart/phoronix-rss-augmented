@@ -7,6 +7,10 @@
   "settings": {
     "files.eol": "\n",
     "editor.formatOnSave": true,
+    "files.associations": {
+      // stop markdownlint from complaining about a plain text LICENSE file
+      "LICENSE": "plaintext"
+    },
     "[jsonc]": {
       "editor.tabSize": 2,
       "editor.defaultFormatter": "vscode.html-language-features"
