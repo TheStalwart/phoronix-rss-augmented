@@ -95,8 +95,6 @@ for item in source_rss_tree.iter('item'):
     for sharebar in article_html.findAll('select', {"id": "phx_article_page_selector"}):
         sharebar.extract()
 
-    print(article_html)
-
     # Replace <description> tag value with full content of the article
     description = item.find('description')
     description.text = CDATA(str(article_html))
