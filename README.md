@@ -4,6 +4,10 @@ Injects full content of [Phoronix](https://www.phoronix.com/) news articles into
 
 Production instance: <https://phoronix.retromultiplayer.com/phoronix-rss-augmented.xml>
 
+## Runtime requirements
+
+- Python 3.9
+
 ## Development environment
 
 ### venv-based
