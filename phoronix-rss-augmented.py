@@ -98,6 +98,12 @@ for item in source_rss_tree.iter('item'):
     for page_selector in article_html.findAll('select', {"id": "phx_article_page_selector"}):
         page_selector.extract()
 
+    # Delete <h1> and <div class="author"> elements
+    # because readers like Feedly provide their own
+    # based on RSS metadata
+    article_html.find('h1').extract()
+    article_html.find('div', {'class': 'author'}).extract()
+
     # Replace <description> tag value with full content of the article
     description = item.find('description')
     description.text = CDATA(str(article_html))
