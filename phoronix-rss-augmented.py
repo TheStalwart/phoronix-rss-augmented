@@ -24,7 +24,7 @@ OUTPUT_ROOT = os.path.join(PROJECT_ROOT, "output")
 OUTPUT_RSS_FILE_PATH = os.path.join(OUTPUT_ROOT, 'phoronix-rss-augmented.xml')
 
 def fetch_and_cache(url, cache_path):
-    print("Fetching fresh source RSS...")
+    print(f"Fetching fresh copy of {url}")
     text = requests.get(url).text
     with open(cache_path, "w", encoding='utf-8') as f:
         f.write(text)
