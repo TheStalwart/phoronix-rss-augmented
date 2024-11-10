@@ -8,7 +8,8 @@ import time
 from lxml.etree import CDATA, parse
 
 # Source RSS URL
-SOURCE_RSS_URL = 'https://www.phoronix.com/rss.php'
+WEBSITE_ROOT_URL = 'https://www.phoronix.com'
+SOURCE_RSS_URL = f"{WEBSITE_ROOT_URL}/rss.php"
 
 # Define file paths
 PROJECT_ROOT = pathlib.Path(__file__).parent.resolve()
@@ -52,8 +53,10 @@ source_rss_tree = parse(CACHE_SOURCE_RSS_FILE_PATH)
 for item in source_rss_tree.iter('item'):
     item_url = item.find('link').text
     item_url_hash = hashlib.md5(item_url.encode('utf-8')).hexdigest()
-    item_cache_file_path = CACHE_SOURCE_RSS_FILE_PATH = os.path.join(CACHE_ROOT, f'{item_url_hash}.html')
-    print(f"URL: {item_url.ljust(70)} cache path: {item_cache_file_path}")
+    item_url_relative = item_url.removeprefix(WEBSITE_ROOT_URL)
+    item_cache_file_name = f'{item_url_hash}.html'
+    item_cache_file_path = CACHE_SOURCE_RSS_FILE_PATH = os.path.join(CACHE_ROOT, item_cache_file_name)
+    print(f"URL: {item_url_relative.ljust(40)} cache file name: {item_cache_file_name}")
 
     # Check for item HTML cache, [re]download if necessary
     soup = None
