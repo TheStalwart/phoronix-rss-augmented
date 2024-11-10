@@ -56,7 +56,7 @@ for item in source_rss_tree.iter('item'):
     item_url_relative = item_url.removeprefix(WEBSITE_ROOT_URL)
     item_cache_file_name = f'{item_url_hash}.html'
     item_cache_file_path = CACHE_SOURCE_RSS_FILE_PATH = os.path.join(CACHE_ROOT, item_cache_file_name)
-    print(f"URL: {item_url_relative.ljust(40)} cache file name: {item_cache_file_name}")
+    print(f"---\nURL: {item_url_relative.ljust(40)} cache file name: {item_cache_file_name}")
 
     # Check for item HTML cache, [re]download if necessary
     soup = None
