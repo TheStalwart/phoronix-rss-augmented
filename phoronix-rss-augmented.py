@@ -116,6 +116,22 @@ for item in source_rss_tree.iter('item'):
     article_html.find('h1').extract()
     article_html.find('div', {'class': 'author'}).extract()
 
+    # Some category images are way too big,
+    # and Feedly ignores size tags set for these images
+    # <div class="content"> <div style="float: left; padding: 0 10px 10px;"><img alt="APPLE" height="100" src="/assets/categories/apple.webp" width="100"/></div>
+    # <div class="content"> <div style="float: left; padding: 0 10px 10px;"><img alt="MICROSOFT" height="100" src="/assets/categories/microsoft.webp" width="100"/></div>
+    # <div class="content"> <div style="float: left; padding: 0 10px 10px;"><img alt="MESA" height="100" src="/assets/categories/mesa.webp" width="100"/></div>
+    # I could not find a way to limit image size in px/pt/%
+    # that would work in Feedly web UI,
+    # so replace category image tag with its alt value.
+    category_img_tag_container = article_html.find('div', {'class': 'content'}).find('div')
+    if category_img_tag_container:
+        category_img_tag = category_img_tag_container.select_one('img[src^="/assets/categories/"]')
+        if category_img_tag:
+            category_replacement_tag = soup.new_tag("div")
+            category_replacement_tag.string = category_img_tag['alt']
+            category_img_tag.replace_with(category_replacement_tag)
+
     # Replace <description> tag value with full content of the article
     description = item.find('description')
     description.text = CDATA(str(article_html))
