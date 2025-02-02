@@ -6,6 +6,7 @@ import pathlib
 import requests
 import time
 from lxml.etree import CDATA, parse
+import sentry_sdk
 
 # Source RSS URL
 WEBSITE_ROOT_URL = 'https://www.phoronix.com'
@@ -30,6 +31,17 @@ def fetch_and_cache(url, cache_path):
     with open(cache_path, "w", encoding='utf-8') as f:
         f.write(text)
     return text
+
+# Init Sentry before doing anything that might raise exception
+try:
+    sentry_sdk.init(
+        dsn=pathlib.Path(os.path.join(PROJECT_ROOT, "sentry.dsn")).read_text(),
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for tracing.
+        traces_sample_rate=1.0,
+    )
+except:
+    pass
 
 # Check for Source RSS cache, [re]download if necessary
 if not os.path.isfile(CACHE_SOURCE_RSS_FILE_PATH):

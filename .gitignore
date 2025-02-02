@@ -1,5 +1,7 @@
 .venv/
 
+sentry.dsn
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
