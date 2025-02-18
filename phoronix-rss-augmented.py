@@ -1,3 +1,4 @@
+import sys
 from bs4 import BeautifulSoup
 import hashlib
 import math
@@ -60,7 +61,15 @@ else:
         fetch_and_cache(SOURCE_RSS_URL, CACHE_SOURCE_RSS_FILE_PATH)
 
 # Parse Source RSS
-source_rss_tree = parse(CACHE_SOURCE_RSS_FILE_PATH)
+try:
+    source_rss_tree = parse(CACHE_SOURCE_RSS_FILE_PATH)
+except Exception as e:
+    print(f"Failed to parse {CACHE_SOURCE_RSS_FILE_PATH}:")
+    print(e)
+    print(f"\nContents of file:")
+    with open(CACHE_SOURCE_RSS_FILE_PATH, encoding='utf-8') as f:
+        print(f.read())
+        sys.exit(1)
 
 for item in source_rss_tree.iter('item'):
     item_url = item.find('link').text
