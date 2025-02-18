@@ -105,7 +105,7 @@ for item in source_rss_tree.iter('item'):
     # Multipage articles contain page selector element
     # that has invalid (for RSS) onchange attribute.
     # Delete it for now to pass validation
-    # but maybe later i could implement 
+    # but maybe later i could implement
     # fetching the entire content of multipage articles.
     for page_selector in article_html.findAll('select', {"id": "phx_article_page_selector"}):
         page_selector.extract()
