@@ -28,10 +28,17 @@ OUTPUT_RSS_FILE_PATH = os.path.join(OUTPUT_ROOT, 'phoronix-rss-augmented.xml')
 
 def fetch_and_cache(url, cache_path):
     print(f"Fetching fresh copy of {url}")
-    text = requests.get(url).text
+    response = requests.get(url)
+    if not response.ok:
+        print(f"\nFailed to request content of {item_url}")
+        print(f"\nResponse:")
+        print(response)
+        print(f"\nResponse.text:")
+        print(response.text)
+        sys.exit(1)
     with open(cache_path, "w", encoding='utf-8') as f:
-        f.write(text)
-    return text
+        f.write(response.text)
+    return response.text
 
 # Init Sentry before doing anything that might raise exception
 try:
