@@ -26,6 +26,11 @@ CACHE_ITEM_TTL = 24 # hours
 OUTPUT_ROOT = os.path.join(PROJECT_ROOT, "output")
 OUTPUT_RSS_FILE_PATH = os.path.join(OUTPUT_ROOT, 'phoronix-rss-augmented.xml')
 
+def report_failure_and_exit():
+    if betterstack_heartbeat_url:
+        requests.get(f"{betterstack_heartbeat_url}/fail")
+    sys.exit(1)
+
 def fetch_and_cache(url, cache_path):
     print(f"Fetching fresh copy of {url}")
     response = requests.get(url)
@@ -35,7 +40,7 @@ def fetch_and_cache(url, cache_path):
         print(response)
         print(f"\nResponse.text:")
         print(response.text)
-        sys.exit(1)
+        report_failure_and_exit()
     with open(cache_path, "w", encoding='utf-8') as f:
         f.write(response.text)
     return response.text
@@ -48,6 +53,13 @@ try:
         # of transactions for tracing.
         traces_sample_rate=1.0,
     )
+except:
+    pass
+
+# Attempt to load Better Stack heartbeat token
+betterstack_heartbeat_url = None
+try:
+    betterstack_heartbeat_url = pathlib.Path(os.path.join(PROJECT_ROOT, "heartbeat.url")).read_text()
 except:
     pass
 
@@ -76,7 +88,7 @@ except Exception as e:
     print(f"\nContents of file:")
     with open(CACHE_SOURCE_RSS_FILE_PATH, encoding='utf-8') as f:
         print(f.read())
-        sys.exit(1)
+    report_failure_and_exit()
 
 for item in source_rss_tree.iter('item'):
     item_url = item.find('link').text
@@ -154,3 +166,6 @@ for item in source_rss_tree.iter('item'):
 
 # Output augmented RSS file
 source_rss_tree.write(OUTPUT_RSS_FILE_PATH, encoding = 'utf-8', xml_declaration = True)
+
+if betterstack_heartbeat_url:
+    requests.get(betterstack_heartbeat_url)

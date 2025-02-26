@@ -13,6 +13,11 @@ Production instance: <https://phoronix.retromultiplayer.com/phoronix-rss-augment
 To enable [Sentry.io SDK](https://docs.sentry.io/platforms/python/),
 create `sentry.dsn` file with Client Key (DSN) in the root of the project.
 
+## Better Stack heartbeat monitor
+
+To enable [Better Stack heartbeat monitor](https://betterstack.com/docs/uptime/cron-and-heartbeat-monitor/),
+create `heartbeat.url` file with heartbeat URL in the root of the project.
+
 ## Development environment
 
 ### venv-based
