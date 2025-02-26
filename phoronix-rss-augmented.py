@@ -29,7 +29,11 @@ OUTPUT_RSS_FILE_PATH = os.path.join(OUTPUT_ROOT, 'phoronix-rss-augmented.xml')
 
 def report_failure_and_exit():
     if betterstack_heartbeat_url:
-        requests.get(f"{betterstack_heartbeat_url}/fail")
+        print(f"Reporting heartbeat to {betterstack_heartbeat_url}/fail")
+        response = requests.get(f"{betterstack_heartbeat_url}/fail")
+        if not response.ok:
+            print(f"Failed!")
+        print(f"Response: [{response.status_code}]")
     sys.exit(1)
 
 def fetch_and_cache(url, cache_path):
@@ -49,7 +53,7 @@ def fetch_and_cache(url, cache_path):
 # Init Sentry before doing anything that might raise exception
 try:
     sentry_sdk.init(
-        dsn=pathlib.Path(os.path.join(PROJECT_ROOT, "sentry.dsn")).read_text(),
+        dsn=pathlib.Path(os.path.join(PROJECT_ROOT, "sentry.dsn")).read_text().strip(),
         # Set traces_sample_rate to 1.0 to capture 100%
         # of transactions for tracing.
         traces_sample_rate=1.0,
@@ -60,7 +64,7 @@ except:
 # Attempt to load Better Stack heartbeat token
 betterstack_heartbeat_url = None
 try:
-    betterstack_heartbeat_url = pathlib.Path(os.path.join(PROJECT_ROOT, "heartbeat.url")).read_text()
+    betterstack_heartbeat_url = pathlib.Path(os.path.join(PROJECT_ROOT, "heartbeat.url")).read_text().strip()
 except:
     pass
 
@@ -182,4 +186,8 @@ for item_cache_file_path in glob(os.path.join(CACHE_ROOT, "item_*.html")):
 
 # Report success to Better Stack
 if betterstack_heartbeat_url:
-    requests.get(betterstack_heartbeat_url)
+    print(f"Reporting heartbeat to {betterstack_heartbeat_url}")
+    response = requests.get(betterstack_heartbeat_url)
+    if not response.ok:
+        print(f"Failed!")
+    print(f"Response: [{response.status_code}]")
