@@ -7,6 +7,7 @@ import pathlib
 import requests
 import time
 from lxml.etree import CDATA, parse
+from glob import glob
 import sentry_sdk
 
 # Source RSS URL
@@ -94,7 +95,7 @@ for item in source_rss_tree.iter('item'):
     item_url = item.find('link').text
     item_url_hash = hashlib.md5(item_url.encode('utf-8')).hexdigest()
     item_url_relative = item_url.removeprefix(WEBSITE_ROOT_URL)
-    item_cache_file_name = f'{item_url_hash}.html'
+    item_cache_file_name = f'item_{item_url_hash}.html'
     item_cache_file_path = CACHE_SOURCE_RSS_FILE_PATH = os.path.join(CACHE_ROOT, item_cache_file_name)
     print(f"---\nURL: {item_url_relative.ljust(40)} cache file name: {item_cache_file_name}")
 
@@ -163,9 +164,22 @@ for item in source_rss_tree.iter('item'):
     # Replace <description> tag value with full content of the article
     description = item.find('description')
     description.text = CDATA(str(article_html))
+print(f"---")
 
 # Output augmented RSS file
 source_rss_tree.write(OUTPUT_RSS_FILE_PATH, encoding = 'utf-8', xml_declaration = True)
 
+# Clean up old item cache files
+current_time = time.time()
+for item_cache_file_path in glob(os.path.join(CACHE_ROOT, "item_*.html")):
+    cache_item_modification_timestamp = os.path.getmtime(item_cache_file_path)
+    cache_item_age_seconds = current_timestamp - cache_item_modification_timestamp
+    cache_item_age_hours = cache_item_age_seconds / 60 / 60
+
+    if cache_item_age_hours > CACHE_ITEM_TTL:
+        print(f"Item cache file {os.path.basename(item_cache_file_path)} is >{math.floor(cache_item_age_hours)} hours old, deleting")
+        # os.remove(item_cache_file_path)
+
+# Report success to Better Stack
 if betterstack_heartbeat_url:
     requests.get(betterstack_heartbeat_url)
