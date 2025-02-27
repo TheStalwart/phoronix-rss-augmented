@@ -6,7 +6,7 @@ import os
 import pathlib
 import requests
 import time
-from lxml.etree import CDATA, parse
+from lxml.etree import CDATA, parse, ElementTree, Element
 from glob import glob
 import sentry_sdk
 
@@ -95,7 +95,24 @@ except Exception as e:
         print(f.read())
     report_failure_and_exit()
 
-for item in source_rss_tree.iter('item'):
+# Fix metadata as suggested by RSS validator
+# https://www.rssboard.org/rss-validator/
+namespace_map = {
+    "dc": "http://purl.org/dc/elements/1.1/",
+    "atom": "http://www.w3.org/2005/Atom",
+}
+original_root_element = source_rss_tree.getroot()
+new_root_element = Element(original_root_element.tag, {"version": "2.0"}, namespace_map)
+new_root_element.extend(original_root_element)
+new_rss_tree = ElementTree(new_root_element)
+
+link_self = Element("{http://www.w3.org/2005/Atom}link")
+link_self.set("href", "https://phoronix.retromultiplayer.com/phoronix-rss-augmented.xml")
+link_self.set("rel", "self")
+link_self.set("type", "application/rss+xml")
+new_rss_tree.find("channel").insert(0, link_self)
+
+for item in new_rss_tree.iter('item'):
     item_url = item.find('link').text
     item_url_hash = hashlib.md5(item_url.encode('utf-8')).hexdigest()
     item_url_relative = item_url.removeprefix(WEBSITE_ROOT_URL)
@@ -175,7 +192,7 @@ for item in source_rss_tree.iter('item'):
 print(f"---")
 
 # Output augmented RSS file
-source_rss_tree.write(OUTPUT_RSS_FILE_PATH, encoding = 'utf-8', xml_declaration = True)
+new_rss_tree.write(OUTPUT_RSS_FILE_PATH, encoding = 'utf-8', xml_declaration = True)
 
 # Clean up old item cache files
 current_time = time.time()
