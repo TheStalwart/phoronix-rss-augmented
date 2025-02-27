@@ -135,6 +135,10 @@ for item in source_rss_tree.iter('item'):
     for sharebar in article_html.findAll('div', {"id": "sharebar"}):
         sharebar.extract()
 
+    # Delete <ins class="adsbygoogle"> RSS validator is complaining about
+    for ins_tag in article_html.findAll('ins', {"class": "adsbygoogle"}):
+        ins_tag.extract()
+
     # Multipage articles contain page selector element
     # that has invalid (for RSS) onchange attribute.
     # Delete it for now to pass validation
