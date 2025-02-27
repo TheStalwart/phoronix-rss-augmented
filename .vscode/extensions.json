@@ -1,0 +1,9 @@
+{
+    "recommendations": [
+        "DavidAnson.vscode-markdownlint",
+        "eamodio.gitlens",
+        "ms-python.python",
+        "redhat.vscode-xml",
+        "yzhang.markdown-all-in-one",
+    ]
+}
