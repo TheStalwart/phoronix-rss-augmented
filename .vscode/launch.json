@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Python Debugger: No arguments",
+      "name": "Python Debugger: phoronix-rss-augmented.py",
       "type": "debugpy",
       "request": "launch",
       "program": "phoronix-rss-augmented.py",
