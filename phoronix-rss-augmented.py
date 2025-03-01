@@ -186,6 +186,10 @@ for item in new_rss_tree.iter('item'):
             category_replacement_tag.string = category_img_tag['alt']
             category_img_tag.replace_with(category_replacement_tag)
 
+    # Fix relative links RSS validator is complaining about
+    for relative_a_element in article_html.select('a[href^="/"]:not([href^="//"])'):
+        relative_a_element['href'] = f"{WEBSITE_ROOT_URL}{relative_a_element.get('href')}"
+
     # Replace <description> tag value with full content of the article
     description = item.find('description')
     description.text = CDATA(str(article_html))
