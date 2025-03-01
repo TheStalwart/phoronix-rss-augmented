@@ -203,7 +203,7 @@ for item_cache_file_path in glob(os.path.join(CACHE_ROOT, "item_*.html")):
 
     if cache_item_age_hours > CACHE_ITEM_TTL:
         print(f"Item cache file {os.path.basename(item_cache_file_path)} is >{math.floor(cache_item_age_hours)} hours old, deleting")
-        # os.remove(item_cache_file_path)
+        os.remove(item_cache_file_path)
 
 # Report success to Better Stack
 if betterstack_heartbeat_url:
