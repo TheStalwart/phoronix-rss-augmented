@@ -190,6 +190,12 @@ for item in new_rss_tree.iter('item'):
     for relative_a_element in article_html.select('a[href^="/"]:not([href^="//"])'):
         relative_a_element['href'] = f"{WEBSITE_ROOT_URL}{relative_a_element.get('href')}"
 
+    # _Then_, fix a and img tags missing https:// protocol declaration
+    for relative_a_element in article_html.select('a[href^="//"]'):
+        relative_a_element['href'] = f"https:{relative_a_element.get('href')}"
+    for relative_img_element in article_html.select('img[src^="//"]'):
+        relative_img_element['src'] = f"https:{relative_img_element.get('src')}"
+
     # Replace <description> tag value with full content of the article
     description = item.find('description')
     description.text = CDATA(str(article_html))
