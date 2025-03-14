@@ -40,7 +40,7 @@ def fetch_and_cache(url, cache_path):
     print(f"Fetching fresh copy of {url}")
     response = requests.get(url)
     if not response.ok:
-        print(f"\nFailed to request content of {item_url}")
+        print(f"\nFailed to request content of {url}")
         print(f"\nResponse:")
         print(response)
         print(f"\nResponse.text:")
