@@ -1,2 +1,5 @@
+# output file in RSS 2.0 format
 *.xml
+
+# a copy of output file i use during development to diff against debug build
 *.xml.old
