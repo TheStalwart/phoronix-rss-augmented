@@ -80,7 +80,7 @@ else:
     print(f"Source RSS cache is {cache_source_rss_age_minutes} minutes old")
 
     if cache_source_rss_age_minutes < CACHE_SOURCE_TTL:
-        print("Loading cached source RSS...")
+        print("Reusing cached source RSS...")
     else:
         fetch_and_cache(SOURCE_RSS_URL, CACHE_SOURCE_RSS_FILE_PATH)
 
@@ -134,7 +134,7 @@ for item in new_rss_tree.iter('item'):
         print(f"{item_url} cache is {cache_item_age_hours} hours old")
 
         if cache_item_age_hours < CACHE_ITEM_TTL:
-            print(f"Loading cached {item_url}...")
+            print(f"Reusing cached {item_url}...")
             with open(item_cache_file_path, encoding='utf-8') as f:
                 soup = BeautifulSoup(f, 'html.parser')
         else:
