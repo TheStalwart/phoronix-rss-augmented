@@ -9,6 +9,7 @@ import time
 from lxml.etree import CDATA, parse, ElementTree, Element
 from glob import glob
 import sentry_sdk
+import re
 
 # Source RSS URL
 WEBSITE_ROOT_URL = 'https://www.phoronix.com'
@@ -195,6 +196,12 @@ for item in new_rss_tree.iter('item'):
         relative_a_element['href'] = f"https:{relative_a_element.get('href')}"
     for relative_img_element in article_html.select('img[src^="//"]'):
         relative_img_element['src'] = f"https:{relative_img_element.get('src')}"
+
+    # Comment counter is almost always wrong,
+    # replace its text with a more honest one
+    comments_a_element = article_html.find(href=re.compile('/forums/node/'), text=re.compile('Comments$'))
+    if comments_a_element:
+        comments_a_element.string = "Add A Comment"
 
     # Replace <description> tag value with full content of the article
     description = item.find('description')
