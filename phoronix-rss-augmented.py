@@ -201,7 +201,7 @@ for item in new_rss_tree.iter('item'):
     # replace its text with a more honest one
     comments_a_element = article_html.find(href=re.compile('/forums/node/'), text=re.compile('Comments$'))
     if comments_a_element:
-        comments_a_element.string = "Add A Comment"
+        comments_a_element.string = "[Comments]"
 
     # Replace <description> tag value with full content of the article
     description = item.find('description')
