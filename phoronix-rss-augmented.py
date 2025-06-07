@@ -198,8 +198,13 @@ for item in new_rss_tree.iter('item'):
         relative_img_element['src'] = f"https:{relative_img_element.get('src')}"
 
     # Comment counter is almost always wrong,
-    # replace its text with a more honest one
-    comments_a_element = article_html.find(href=re.compile('/forums/node/'), text=re.compile('Comments$'))
+    # replace its text with a more honest one.
+    # The tags we are looking for,
+    # after the code above replaces all the URLs with the absolute ones,
+    # look like this:
+    # <a href="https://www.phoronix.com/forums/node/1551155">Add A Comment</a>
+    # <a href="https://www.phoronix.com/forums/node/1551633">9 Comments</a>
+    comments_a_element = article_html.find(href=re.compile('/forums/node/'), string=re.compile('Comment[s]?$'))
     if comments_a_element:
         comments_a_element.string = "[Comments]"
 
