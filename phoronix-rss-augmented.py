@@ -4,6 +4,7 @@ import hashlib
 import math
 import os
 import pathlib
+import humanize
 from requests import Session
 from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
@@ -242,6 +243,9 @@ for item_cache_file_path in glob(os.path.join(CACHE_ROOT, "item_*.html")):
     if cache_item_age_hours > CACHE_ITEM_TTL:
         print(f"Item cache file {os.path.basename(item_cache_file_path)} is >{math.floor(cache_item_age_hours)} hours old, deleting")
         os.remove(item_cache_file_path)
+
+humanized_execution_duration = humanize.precisedelta(time.time() - current_timestamp, minimum_unit="seconds", format="%.0f")
+print(f"Completed in {humanized_execution_duration}")
 
 # Report success to Better Stack
 if betterstack_heartbeat_url:
