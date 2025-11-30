@@ -85,12 +85,13 @@ http_adapter = HTTPAdapter(max_retries=request_retry_config)
 requests.mount('http://', http_adapter)
 requests.mount('https://', http_adapter)
 
+current_timestamp = time.time()
+
 # Check for Source RSS cache, [re]download if necessary
 if not os.path.isfile(CACHE_SOURCE_RSS_FILE_PATH):
     print(f"Source RSS cache not found")
     fetch_and_cache(SOURCE_RSS_URL, CACHE_SOURCE_RSS_FILE_PATH)
 else:
-    current_timestamp = time.time()
     cache_source_rss_modification_timestamp = os.path.getmtime(CACHE_SOURCE_RSS_FILE_PATH)
     cache_source_rss_age_seconds = current_timestamp - cache_source_rss_modification_timestamp
     cache_source_rss_age_minutes = math.floor(cache_source_rss_age_seconds / 60)
@@ -144,7 +145,6 @@ for item in new_rss_tree.iter('item'):
         html_contents = fetch_and_cache(item_url, item_cache_file_path)
         soup = BeautifulSoup(html_contents, 'html.parser')
     else:
-        current_timestamp = time.time()
         cache_item_modification_timestamp = os.path.getmtime(item_cache_file_path)
         cache_item_age_seconds = current_timestamp - cache_item_modification_timestamp
         cache_item_age_hours = math.floor(cache_item_age_seconds / 60 / 60)
