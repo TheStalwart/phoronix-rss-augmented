@@ -4,7 +4,9 @@ import hashlib
 import math
 import os
 import pathlib
-import requests
+from requests import Session
+from urllib3.util.retry import Retry
+from requests.adapters import HTTPAdapter
 import time
 from lxml.etree import CDATA, parse, ElementTree, Element
 from glob import glob
@@ -14,6 +16,10 @@ import re
 # Source RSS URL
 WEBSITE_ROOT_URL = 'https://www.phoronix.com'
 SOURCE_RSS_URL = f"{WEBSITE_ROOT_URL}/rss.php"
+
+# HTTP request properties
+HTTP_REQUEST_INTERVAL = 15 # also used as backoff_factor when retrying failed requests
+HTTP_RETRY_ATTEMPT_COUNT = 5
 
 # Define file paths
 PROJECT_ROOT = pathlib.Path(__file__).parent.resolve()
@@ -39,6 +45,7 @@ def report_failure_and_exit():
 
 def fetch_and_cache(url, cache_path):
     print(f"Fetching fresh copy of {url}")
+    time.sleep(HTTP_REQUEST_INTERVAL)
     response = requests.get(url)
     if not response.ok:
         print(f"\nFailed to request content of {url}")
@@ -68,6 +75,15 @@ try:
     betterstack_heartbeat_url = pathlib.Path(os.path.join(PROJECT_ROOT, "heartbeat.url")).read_text().strip()
 except:
     pass
+
+# Set up a customized instance of Requests library
+# to avoid crashing on monthly DNS resolution failures
+# https://stackoverflow.com/questions/23013220/max-retries-exceeded-with-url-in-requests
+requests = Session()
+request_retry_config = Retry(total=HTTP_RETRY_ATTEMPT_COUNT, backoff_factor=HTTP_REQUEST_INTERVAL)
+http_adapter = HTTPAdapter(max_retries=request_retry_config)
+requests.mount('http://', http_adapter)
+requests.mount('https://', http_adapter)
 
 # Check for Source RSS cache, [re]download if necessary
 if not os.path.isfile(CACHE_SOURCE_RSS_FILE_PATH):
