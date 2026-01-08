@@ -13,6 +13,8 @@ from lxml.etree import CDATA, parse, ElementTree, Element
 from glob import glob
 import sentry_sdk
 import re
+import logging
+import logging.config
 
 # Source RSS URL
 WEBSITE_ROOT_URL = 'https://www.phoronix.com'
@@ -37,23 +39,23 @@ OUTPUT_RSS_FILE_PATH = os.path.join(OUTPUT_ROOT, 'phoronix-rss-augmented.xml')
 
 def report_failure_and_exit():
     if betterstack_heartbeat_url:
-        print(f"Reporting heartbeat to {betterstack_heartbeat_url}/fail")
+        logger.info(f"Reporting heartbeat to {betterstack_heartbeat_url}/fail")
         response = requests.get(f"{betterstack_heartbeat_url}/fail")
         if not response.ok:
-            print(f"Failed!")
-        print(f"Response: [{response.status_code}]")
+            logger.error(f"Failed!")
+        logger.info(f"Response: [{response.status_code}]")
     sys.exit(1)
 
 def fetch_and_cache(url, cache_path):
-    print(f"Fetching fresh copy of {url}")
+    logger.info(f"Fetching fresh copy of {url}")
     time.sleep(HTTP_REQUEST_INTERVAL)
     response = requests.get(url)
     if not response.ok:
-        print(f"\nFailed to request content of {url}")
-        print(f"\nResponse:")
-        print(response)
-        print(f"\nResponse.text:")
-        print(response.text)
+        logger.error(f"\nFailed to request content of {url}")
+        logger.error(f"\nResponse:")
+        logger.error(response)
+        logger.error(f"\nResponse.text:")
+        logger.error(response.text)
         report_failure_and_exit()
     with open(cache_path, "w", encoding='utf-8') as f:
         f.write(response.text)
@@ -77,6 +79,16 @@ try:
 except:
     pass
 
+# Set up logging
+logger = logging.getLogger()
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+logging.Formatter.converter = time.gmtime
+try:
+    # Attempt to initialize Loggly
+    logging.config.fileConfig(pathlib.Path(os.path.join(PROJECT_ROOT, "loggly.conf")))
+except:
+    pass
+
 # Set up a customized instance of Requests library
 # to avoid crashing on monthly DNS resolution failures
 # https://stackoverflow.com/questions/23013220/max-retries-exceeded-with-url-in-requests
@@ -90,16 +102,16 @@ current_timestamp = time.time()
 
 # Check for Source RSS cache, [re]download if necessary
 if not os.path.isfile(CACHE_SOURCE_RSS_FILE_PATH):
-    print(f"Source RSS cache not found")
+    logger.info(f"Source RSS cache not found")
     fetch_and_cache(SOURCE_RSS_URL, CACHE_SOURCE_RSS_FILE_PATH)
 else:
     cache_source_rss_modification_timestamp = os.path.getmtime(CACHE_SOURCE_RSS_FILE_PATH)
     cache_source_rss_age_seconds = current_timestamp - cache_source_rss_modification_timestamp
     cache_source_rss_age_minutes = math.floor(cache_source_rss_age_seconds / 60)
-    print(f"Source RSS cache is {cache_source_rss_age_minutes} minutes old")
+    logger.info(f"Source RSS cache is {cache_source_rss_age_minutes} minutes old")
 
     if cache_source_rss_age_minutes < CACHE_SOURCE_TTL:
-        print("Reusing cached source RSS...")
+        logger.info("Reusing cached source RSS...")
     else:
         fetch_and_cache(SOURCE_RSS_URL, CACHE_SOURCE_RSS_FILE_PATH)
 
@@ -107,11 +119,11 @@ else:
 try:
     source_rss_tree = parse(CACHE_SOURCE_RSS_FILE_PATH)
 except Exception as e:
-    print(f"Failed to parse {CACHE_SOURCE_RSS_FILE_PATH}:")
-    print(e)
-    print(f"\nContents of file:")
+    logger.error(f"Failed to parse {CACHE_SOURCE_RSS_FILE_PATH}:")
+    logger.error(e)
+    logger.error(f"\nContents of file:")
     with open(CACHE_SOURCE_RSS_FILE_PATH, encoding='utf-8') as f:
-        print(f.read())
+        logger.error(f.read())
     report_failure_and_exit()
 
 # Fix metadata as suggested by RSS validator
@@ -137,22 +149,22 @@ for item in new_rss_tree.iter('item'):
     item_url_relative = item_url.removeprefix(WEBSITE_ROOT_URL)
     item_cache_file_name = f'item_{item_url_hash}.html'
     item_cache_file_path = CACHE_SOURCE_RSS_FILE_PATH = os.path.join(CACHE_ROOT, item_cache_file_name)
-    print(f"---\nURL: {item_url_relative.ljust(40)} cache file name: {item_cache_file_name}")
+    logger.info(f"---\nURL: {item_url_relative.ljust(40)} cache file name: {item_cache_file_name}")
 
     # Check for item HTML cache, [re]download if necessary
     soup = None
     if not os.path.isfile(item_cache_file_path):
-        print(f"{item_url} cache not found")
+        logger.info(f"{item_url} cache not found")
         html_contents = fetch_and_cache(item_url, item_cache_file_path)
         soup = BeautifulSoup(html_contents, 'html.parser')
     else:
         cache_item_modification_timestamp = os.path.getmtime(item_cache_file_path)
         cache_item_age_seconds = current_timestamp - cache_item_modification_timestamp
         cache_item_age_hours = math.floor(cache_item_age_seconds / 60 / 60)
-        print(f"{item_url} cache is {cache_item_age_hours} hours old")
+        logger.info(f"{item_url} cache is {cache_item_age_hours} hours old")
 
         if cache_item_age_hours < CACHE_ITEM_TTL:
-            print(f"Reusing cached {item_url}...")
+            logger.info(f"Reusing cached {item_url}...")
             with open(item_cache_file_path, encoding='utf-8') as f:
                 soup = BeautifulSoup(f, 'html.parser')
         else:
@@ -228,7 +240,7 @@ for item in new_rss_tree.iter('item'):
     # Replace <description> tag value with full content of the article
     description = item.find('description')
     description.text = CDATA(str(article_html))
-print(f"---")
+logger.info(f"---")
 
 # Output augmented RSS file
 new_rss_tree.write(OUTPUT_RSS_FILE_PATH, encoding = 'utf-8', xml_declaration = True)
@@ -241,16 +253,16 @@ for item_cache_file_path in glob(os.path.join(CACHE_ROOT, "item_*.html")):
     cache_item_age_hours = cache_item_age_seconds / 60 / 60
 
     if cache_item_age_hours > CACHE_ITEM_TTL:
-        print(f"Item cache file {os.path.basename(item_cache_file_path)} is >{math.floor(cache_item_age_hours)} hours old, deleting")
+        logger.info(f"Item cache file {os.path.basename(item_cache_file_path)} is >{math.floor(cache_item_age_hours)} hours old, deleting")
         os.remove(item_cache_file_path)
 
 humanized_execution_duration = humanize.precisedelta(time.time() - current_timestamp, minimum_unit="seconds", format="%.0f")
-print(f"Completed in {humanized_execution_duration}")
+logger.info(f"Completed in {humanized_execution_duration}")
 
 # Report success to Better Stack
 if betterstack_heartbeat_url:
-    print(f"Reporting heartbeat to {betterstack_heartbeat_url}")
+    logger.info(f"Reporting heartbeat to {betterstack_heartbeat_url}")
     response = requests.get(betterstack_heartbeat_url)
     if not response.ok:
-        print(f"Failed!")
-    print(f"Response: [{response.status_code}]")
+        logger.error(f"Failed!")
+    logger.info(f"Response: [{response.status_code}]")

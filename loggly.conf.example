@@ -1,0 +1,24 @@
+[handlers]
+keys=HTTPSHandler,stdout
+
+[handler_HTTPSHandler]
+class=loggly.handlers.HTTPSHandler
+formatter=jsonFormat
+args=('https://logs-01.loggly.com/inputs/TOKEN/tag/python','POST')
+
+[handler_stdout]
+class=StreamHandler
+args=(sys.stdout,)
+
+[formatters]
+keys=jsonFormat
+
+[loggers]
+keys=root
+
+[logger_root]
+handlers=HTTPSHandler,stdout
+level=INFO
+
+[formatter_jsonFormat]
+format={ "loggerName":"%(name)s", "timestamp":"%(asctime)s", "fileName":"%(filename)s", "logRecordCreationTime":"%(created)f", "functionName":"%(funcName)s", "levelNo":"%(levelno)s", "lineNo":"%(lineno)d", "time":"%(msecs)d", "levelName":"%(levelname)s", "message":"%(message)s"}

@@ -2,6 +2,7 @@
 
 sentry.dsn
 heartbeat.url
+loggly.conf
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

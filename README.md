@@ -18,6 +18,10 @@ create `sentry.dsn` file with Client Key (DSN) in the root of the project.
 To enable [Better Stack heartbeat monitor](https://betterstack.com/docs/uptime/cron-and-heartbeat-monitor/),
 create `heartbeat.url` file with heartbeat URL in the root of the project.
 
+## SolarWinds Loggly integration
+
+Copy `loggly.conf.example` to `loggly.conf` and fill in the TOKEN value.
+
 ## Development environment
 
 ### venv-based

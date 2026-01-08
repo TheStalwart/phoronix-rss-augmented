@@ -4,7 +4,9 @@
   "editor.formatOnSave": true,
   "files.associations": {
     // stop markdownlint from complaining about a plain text LICENSE file
-    "LICENSE": "plaintext"
+    "LICENSE": "plaintext",
+    "loggly.conf": "ini",
+    "loggly.conf.example": "ini"
   },
   "[jsonc]": {
     "editor.tabSize": 2,
