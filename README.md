@@ -22,6 +22,10 @@ create `heartbeat.url` file with heartbeat URL in the root of the project.
 
 Copy `loggly.conf.example` to `loggly.conf` and fill in the TOKEN value.
 
+## New Relic integration
+
+Copy `newrelic.ini` to the root of the project.
+
 ## Development environment
 
 ### venv-based

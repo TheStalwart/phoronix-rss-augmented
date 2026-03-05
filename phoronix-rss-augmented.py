@@ -15,6 +15,7 @@ import sentry_sdk
 import re
 import logging
 import logging.config
+import newrelic.agent
 
 # Source RSS URL
 WEBSITE_ROOT_URL = 'https://www.phoronix.com'
@@ -76,6 +77,16 @@ except:
 betterstack_heartbeat_url = None
 try:
     betterstack_heartbeat_url = pathlib.Path(os.path.join(PROJECT_ROOT, "heartbeat.url")).read_text().strip()
+except:
+    pass
+
+# Attempt to set up New Relic
+try:
+    newrelic.agent.initialize(pathlib.Path(os.path.join(PROJECT_ROOT, "newrelic.ini")))
+
+    # without timeout parameter,
+    # the entire script often executes faster than New Relic can initialize itself
+    newrelic.agent.register_application(timeout=10)
 except:
     pass
 
