@@ -1,0 +1,11 @@
+[Unit]
+Description=Phoronix RSS Refresh
+
+[Service]
+Type=oneshot
+ExecStart=/home/phoronix/phoronix-rss-augmented/.venv/bin/python3 /home/phoronix/phoronix-rss-augmented/phoronix-rss-augmented.py
+WorkingDirectory=/home/phoronix/phoronix-rss-augmented
+User=phoronix
+Group=phoronix
+TimeoutStartSec=24h
+KillMode=process

@@ -26,6 +26,13 @@ Copy `loggly.conf.example` to `loggly.conf` and fill in the TOKEN value.
 
 Copy `newrelic.ini` to the root of the project.
 
+## systemd files
+
+`systemd/*` folder contains files that can be copied to `/etc/systemd/system/`
+or symlinked with `systemctl link /home/phoronix/phoronix-rss-augmented/systemd/phoronix.*`
+
+Enable cronjob with `systemctl enable --now phoronix.timer`
+
 ## Development environment
 
 ### venv-based
