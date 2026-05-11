@@ -3,5 +3,5 @@ humanize >= 4.11.0
 loggly-python-handler >= 1.0.0
 lxml >= 6.1.0
 newrelic >= 11.5.0
-requests >= 2.31.0
+requests >= 2.32.0
 sentry-sdk >= 2.13.0
