@@ -43,7 +43,7 @@ def report_failure_and_exit():
         logger.info(f"Reporting heartbeat to {betterstack_heartbeat_url}/fail")
         response = requests.get(f"{betterstack_heartbeat_url}/fail")
         if not response.ok:
-            logger.error(f"Failed!")
+            logger.error("Failed!")
         logger.info(f"Response: [{response.status_code}]")
     sys.exit(1)
 
@@ -53,9 +53,9 @@ def fetch_and_cache(url, cache_path):
     response = requests.get(url)
     if not response.ok:
         logger.error(f"\nFailed to request content of {url}")
-        logger.error(f"\nResponse:")
+        logger.error("\nResponse:")
         logger.error(response)
-        logger.error(f"\nResponse.text:")
+        logger.error("\nResponse.text:")
         logger.error(response.text)
         report_failure_and_exit()
     with open(cache_path, "w", encoding='utf-8') as f:
@@ -113,7 +113,7 @@ current_timestamp = time.time()
 
 # Check for Source RSS cache, [re]download if necessary
 if not os.path.isfile(CACHE_SOURCE_RSS_FILE_PATH):
-    logger.info(f"Source RSS cache not found")
+    logger.info("Source RSS cache not found")
     fetch_and_cache(SOURCE_RSS_URL, CACHE_SOURCE_RSS_FILE_PATH)
 else:
     cache_source_rss_modification_timestamp = os.path.getmtime(CACHE_SOURCE_RSS_FILE_PATH)
@@ -132,7 +132,7 @@ try:
 except Exception as e:
     logger.error(f"Failed to parse {CACHE_SOURCE_RSS_FILE_PATH}:")
     logger.error(e)
-    logger.error(f"\nContents of file:")
+    logger.error("\nContents of file:")
     with open(CACHE_SOURCE_RSS_FILE_PATH, encoding='utf-8') as f:
         logger.error(f.read())
     report_failure_and_exit()
@@ -251,7 +251,7 @@ for item in new_rss_tree.iter('item'):
     # Replace <description> tag value with full content of the article
     description = item.find('description')
     description.text = CDATA(str(article_html))
-logger.info(f"---")
+logger.info("---")
 
 # Output augmented RSS file
 new_rss_tree.write(OUTPUT_RSS_FILE_PATH, encoding = 'utf-8', xml_declaration = True)
@@ -275,5 +275,5 @@ if betterstack_heartbeat_url:
     logger.info(f"Reporting heartbeat to {betterstack_heartbeat_url}")
     response = requests.get(betterstack_heartbeat_url)
     if not response.ok:
-        logger.error(f"Failed!")
+        logger.error("Failed!")
     logger.info(f"Response: [{response.status_code}]")
