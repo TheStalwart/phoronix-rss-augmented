@@ -186,15 +186,15 @@ for item in new_rss_tree.iter('item'):
     article_html = soup.find('article')
 
     # Delete JavaScript
-    for script_tag in article_html.findAll('script'):
+    for script_tag in article_html.find_all('script'):
         script_tag.extract()
 
     # Delete sharebar
-    for sharebar in article_html.findAll('div', {"id": "sharebar"}):
+    for sharebar in article_html.find_all('div', {"id": "sharebar"}):
         sharebar.extract()
 
     # Delete <ins class="adsbygoogle"> RSS validator is complaining about
-    for ins_tag in article_html.findAll('ins', {"class": "adsbygoogle"}):
+    for ins_tag in article_html.find_all('ins', {"class": "adsbygoogle"}):
         ins_tag.extract()
 
     # Multipage articles contain page selector element
@@ -202,7 +202,7 @@ for item in new_rss_tree.iter('item'):
     # Delete it for now to pass validation
     # but maybe later i could implement
     # fetching the entire content of multipage articles.
-    for page_selector in article_html.findAll('select', {"id": "phx_article_page_selector"}):
+    for page_selector in article_html.find_all('select', {"id": "phx_article_page_selector"}):
         page_selector.extract()
 
     # Delete <h1> and <div class="author"> elements
