@@ -8,6 +8,17 @@
     "loggly.conf": "ini",
     "loggly.conf.example": "ini"
   },
+  "ruff.enable": true,
+  "ruff.lint.select": [
+    "ALL"
+  ],
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    }
+  },
   "[jsonc]": {
     "editor.tabSize": 2,
     "editor.defaultFormatter": "vscode.json-language-features"

@@ -1,5 +1,6 @@
 {
     "recommendations": [
+        "charliermarsh.ruff",
         "DavidAnson.vscode-markdownlint",
         "eamodio.gitlens",
         "ms-python.python",
