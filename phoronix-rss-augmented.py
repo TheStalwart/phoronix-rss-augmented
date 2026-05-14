@@ -26,7 +26,7 @@ WEBSITE_ROOT_URL = "https://www.phoronix.com"
 SOURCE_RSS_URL = f"{WEBSITE_ROOT_URL}/rss.php"
 
 # HTTP request properties
-HTTP_REQUEST_INTERVAL = 15  # also used as backoff_factor when retrying failed requests
+HTTP_REQUEST_INTERVAL = 30  # also used as backoff_factor when retrying failed requests
 HTTP_RETRY_ATTEMPT_COUNT = 5
 
 # Define file paths
