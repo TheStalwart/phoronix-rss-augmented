@@ -1,13 +1,16 @@
+"""Phoronix RSS Augmented.
+
+Injects full content of Phoronix news articles into RSS feed.
+"""
+
 import hashlib
 import logging
 import logging.config
 import math
-import os
-import pathlib
 import re
 import sys
 import time
-from glob import glob
+from pathlib import Path
 
 import humanize
 import newrelic.agent
@@ -27,41 +30,41 @@ HTTP_REQUEST_INTERVAL = 15  # also used as backoff_factor when retrying failed r
 HTTP_RETRY_ATTEMPT_COUNT = 5
 
 # Define file paths
-PROJECT_ROOT = pathlib.Path(__file__).parent.resolve()
+PROJECT_ROOT = Path(__file__).parent.resolve()
 
 # Define cache properties
-CACHE_ROOT = os.path.join(PROJECT_ROOT, "cache")
-CACHE_SOURCE_RSS_FILE_PATH = os.path.join(CACHE_ROOT, "source_rss.xml")
+CACHE_ROOT = PROJECT_ROOT / "cache"
+CACHE_SOURCE_RSS_FILE_PATH = CACHE_ROOT / "source_rss.xml"
 CACHE_SOURCE_TTL = 55  # minutes
 CACHE_ITEM_TTL = 24  # hours
 
 # Define output properties
-OUTPUT_ROOT = os.path.join(PROJECT_ROOT, "output")
-OUTPUT_RSS_FILE_PATH = os.path.join(OUTPUT_ROOT, "phoronix-rss-augmented.xml")
+OUTPUT_ROOT = PROJECT_ROOT / "output"
+OUTPUT_RSS_FILE_PATH = OUTPUT_ROOT / "phoronix-rss-augmented.xml"
 
 
 def report_failure_and_exit():
     if betterstack_heartbeat_url:
-        logger.info(f"Reporting heartbeat to {betterstack_heartbeat_url}/fail")
+        logger.info("Reporting heartbeat to %s/fail", betterstack_heartbeat_url)
         response = requests.get(f"{betterstack_heartbeat_url}/fail")
         if not response.ok:
             logger.error("Failed!")
-        logger.info(f"Response: [{response.status_code}]")
+        logger.info("Response: [%d]", response.status_code)
     sys.exit(1)
 
 
 def fetch_and_cache(url, cache_path):
-    logger.info(f"Fetching fresh copy of {url}")
+    logger.info("Fetching fresh copy of %s", url)
     time.sleep(HTTP_REQUEST_INTERVAL)
     response = requests.get(url)
     if not response.ok:
-        logger.error(f"\nFailed to request content of {url}")
+        logger.error("\nFailed to request content of %s", url)
         logger.error("\nResponse:")
         logger.error(response)
         logger.error("\nResponse.text:")
         logger.error(response.text)
         report_failure_and_exit()
-    with open(cache_path, "w", encoding="utf-8") as f:
+    with cache_path.open("w", encoding="utf-8") as f:
         f.write(response.text)
     return response.text
 
@@ -69,7 +72,7 @@ def fetch_and_cache(url, cache_path):
 # Init Sentry before doing anything that might raise exception
 try:
     sentry_sdk.init(
-        dsn=pathlib.Path(os.path.join(PROJECT_ROOT, "sentry.dsn")).read_text().strip(),
+        dsn=(PROJECT_ROOT / "sentry.dsn").read_text().strip(),
         # Set traces_sample_rate to 1.0 to capture 100%
         # of transactions for tracing.
         traces_sample_rate=1.0,
@@ -80,19 +83,7 @@ except OSError:
 # Attempt to load Better Stack heartbeat token
 betterstack_heartbeat_url = None
 try:
-    betterstack_heartbeat_url = (
-        pathlib.Path(os.path.join(PROJECT_ROOT, "heartbeat.url")).read_text().strip()
-    )
-except OSError:
-    pass
-
-# Attempt to set up New Relic
-try:
-    newrelic.agent.initialize(pathlib.Path(os.path.join(PROJECT_ROOT, "newrelic.ini")))
-
-    # without timeout parameter,
-    # the entire script often executes faster than New Relic can initialize itself
-    newrelic.agent.register_application(timeout=10)
+    betterstack_heartbeat_url = (PROJECT_ROOT / "heartbeat.url").read_text().strip()
 except OSError:
     pass
 
@@ -100,18 +91,31 @@ except OSError:
 logger = logging.getLogger()
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 logging.Formatter.converter = time.gmtime
-try:
+
+if not (sys.gettrace() or "debugpy" in sys.modules):
     # Attempt to initialize Loggly
-    logging.config.fileConfig(pathlib.Path(os.path.join(PROJECT_ROOT, "loggly.conf")))
-except OSError:
-    pass
+    try:
+        logging.config.fileConfig(PROJECT_ROOT / "loggly.conf")
+    except OSError:
+        pass
+
+    # Attempt to set up New Relic
+    try:
+        newrelic.agent.initialize(PROJECT_ROOT / "newrelic.ini")
+
+        # without timeout parameter,
+        # the entire script often executes faster than New Relic can initialize itself
+        newrelic.agent.register_application(timeout=10)
+    except OSError:
+        pass
 
 # Set up a customized instance of Requests library
 # to avoid crashing on monthly DNS resolution failures
 # https://stackoverflow.com/questions/23013220/max-retries-exceeded-with-url-in-requests
 requests = Session()
 request_retry_config = Retry(
-    total=HTTP_RETRY_ATTEMPT_COUNT, backoff_factor=HTTP_REQUEST_INTERVAL
+    total=HTTP_RETRY_ATTEMPT_COUNT,
+    backoff_factor=HTTP_REQUEST_INTERVAL,
 )
 http_adapter = HTTPAdapter(max_retries=request_retry_config)
 requests.mount("http://", http_adapter)
@@ -120,18 +124,16 @@ requests.mount("https://", http_adapter)
 current_timestamp = time.time()
 
 # Check for Source RSS cache, [re]download if necessary
-if not os.path.isfile(CACHE_SOURCE_RSS_FILE_PATH):
+if not CACHE_SOURCE_RSS_FILE_PATH.is_file():
     logger.info("Source RSS cache not found")
     fetch_and_cache(SOURCE_RSS_URL, CACHE_SOURCE_RSS_FILE_PATH)
 else:
-    cache_source_rss_modification_timestamp = os.path.getmtime(
-        CACHE_SOURCE_RSS_FILE_PATH
-    )
+    cache_source_rss_modification_timestamp = CACHE_SOURCE_RSS_FILE_PATH.stat().st_mtime
     cache_source_rss_age_seconds = (
         current_timestamp - cache_source_rss_modification_timestamp
     )
     cache_source_rss_age_minutes = math.floor(cache_source_rss_age_seconds / 60)
-    logger.info(f"Source RSS cache is {cache_source_rss_age_minutes} minutes old")
+    logger.info("Source RSS cache is %d minutes old", cache_source_rss_age_minutes)
 
     if cache_source_rss_age_minutes < CACHE_SOURCE_TTL:
         logger.info("Reusing cached source RSS...")
@@ -142,10 +144,10 @@ else:
 try:
     source_rss_tree = parse(CACHE_SOURCE_RSS_FILE_PATH)
 except Exception as e:
-    logger.error(f"Failed to parse {CACHE_SOURCE_RSS_FILE_PATH}:")
+    logger.error("Failed to parse %s:", CACHE_SOURCE_RSS_FILE_PATH)
     logger.error(e)
     logger.error("\nContents of file:")
-    with open(CACHE_SOURCE_RSS_FILE_PATH, encoding="utf-8") as f:
+    with CACHE_SOURCE_RSS_FILE_PATH.open(encoding="utf-8") as f:
         logger.error(f.read())
     report_failure_and_exit()
 
@@ -162,7 +164,8 @@ new_rss_tree = ElementTree(new_root_element)
 
 link_self = Element("{http://www.w3.org/2005/Atom}link")
 link_self.set(
-    "href", "https://phoronix.retromultiplayer.com/phoronix-rss-augmented.xml"
+    "href",
+    "https://phoronix.retromultiplayer.com/phoronix-rss-augmented.xml",
 )
 link_self.set("rel", "self")
 link_self.set("type", "application/rss+xml")
@@ -173,28 +176,29 @@ for item in new_rss_tree.iter("item"):
     item_url_hash = hashlib.md5(item_url.encode("utf-8")).hexdigest()
     item_url_relative = item_url.removeprefix(WEBSITE_ROOT_URL)
     item_cache_file_name = f"item_{item_url_hash}.html"
-    item_cache_file_path = CACHE_SOURCE_RSS_FILE_PATH = os.path.join(
-        CACHE_ROOT, item_cache_file_name
-    )
+    item_cache_file_path = CACHE_ROOT / item_cache_file_name
+
     logger.info(
-        f"---\nURL: {item_url_relative.ljust(40)} cache file name: {item_cache_file_name}"
+        "---\nURL: %s cache file name: %s",
+        item_url_relative.ljust(40),
+        item_cache_file_name,
     )
 
     # Check for item HTML cache, [re]download if necessary
     soup = None
-    if not os.path.isfile(item_cache_file_path):
-        logger.info(f"{item_url} cache not found")
+    if not item_cache_file_path.is_file():
+        logger.info("%s cache not found", item_url)
         html_contents = fetch_and_cache(item_url, item_cache_file_path)
         soup = BeautifulSoup(html_contents, "html.parser")
     else:
-        cache_item_modification_timestamp = os.path.getmtime(item_cache_file_path)
+        cache_item_modification_timestamp = item_cache_file_path.stat().st_mtime
         cache_item_age_seconds = current_timestamp - cache_item_modification_timestamp
         cache_item_age_hours = math.floor(cache_item_age_seconds / 60 / 60)
-        logger.info(f"{item_url} cache is {cache_item_age_hours} hours old")
+        logger.info("%s cache is %d hours old", item_url, cache_item_age_hours)
 
         if cache_item_age_hours < CACHE_ITEM_TTL:
-            logger.info(f"Reusing cached {item_url}...")
-            with open(item_cache_file_path, encoding="utf-8") as f:
+            logger.info("Reusing cached %s...", item_url)
+            with item_cache_file_path.open(encoding="utf-8") as f:
                 soup = BeautifulSoup(f, "html.parser")
         else:
             html_contents = fetch_and_cache(item_url, item_cache_file_path)
@@ -221,7 +225,8 @@ for item in new_rss_tree.iter("item"):
     # but maybe later i could implement
     # fetching the entire content of multipage articles.
     for page_selector in article_html.find_all(
-        "select", {"id": "phx_article_page_selector"}
+        "select",
+        {"id": "phx_article_page_selector"},
     ):
         page_selector.extract()
 
@@ -233,18 +238,30 @@ for item in new_rss_tree.iter("item"):
 
     # Some category images are way too big,
     # and Feedly ignores size tags set for these images
-    # <div class="content"> <div style="float: left; padding: 0 10px 10px;"><img alt="APPLE" height="100" src="/assets/categories/apple.webp" width="100"/></div>
-    # <div class="content"> <div style="float: left; padding: 0 10px 10px;"><img alt="MICROSOFT" height="100" src="/assets/categories/microsoft.webp" width="100"/></div>
-    # <div class="content"> <div style="float: left; padding: 0 10px 10px;"><img alt="MESA" height="100" src="/assets/categories/mesa.webp" width="100"/></div>
+    # <div class="content">
+    #   <div style="float: left; padding: 0 10px 10px;">
+    #       <img alt="APPLE" height="100"
+    #           src="/assets/categories/apple.webp" width="100"/>
+    #   </div>
+    # <div class="content">
+    #   <div style="float: left; padding: 0 10px 10px;">
+    #       <img alt="MICROSOFT" height="100"
+    #           src="/assets/categories/microsoft.webp" width="100"/>
+    #   </div>
+    # <div class="content">
+    #   <div style="float: left; padding: 0 10px 10px;">
+    #       <img alt="MESA" height="100"
+    #           src="/assets/categories/mesa.webp" width="100"/>
+    #   </div>
     # I could not find a way to limit image size in px/pt/%
     # that would work in Feedly web UI,
     # so replace category image tag with its alt value.
     category_img_tag_container = article_html.find("div", {"class": "content"}).find(
-        "div"
+        "div",
     )
     if category_img_tag_container:
         category_img_tag = category_img_tag_container.select_one(
-            'img[src^="/assets/categories/"]'
+            'img[src^="/assets/categories/"]',
         )
         if category_img_tag:
             category_replacement_tag = soup.new_tag("div")
@@ -271,7 +288,8 @@ for item in new_rss_tree.iter("item"):
     # <a href="https://www.phoronix.com/forums/node/1551155">Add A Comment</a>
     # <a href="https://www.phoronix.com/forums/node/1551633">9 Comments</a>
     comments_a_element = article_html.find(
-        href=re.compile("/forums/node/"), string=re.compile("Comment[s]?$")
+        href=re.compile("/forums/node/"),
+        string=re.compile("Comment[s]?$"),
     )
     if comments_a_element:
         comments_a_element.string = "[Comments]"
@@ -286,26 +304,30 @@ new_rss_tree.write(OUTPUT_RSS_FILE_PATH, encoding="utf-8", xml_declaration=True)
 
 # Clean up old item cache files
 current_time = time.time()
-for item_cache_file_path in glob(os.path.join(CACHE_ROOT, "item_*.html")):
-    cache_item_modification_timestamp = os.path.getmtime(item_cache_file_path)
+for item_cache_file_path in CACHE_ROOT.glob("item_*.html"):
+    cache_item_modification_timestamp = item_cache_file_path.stat().st_mtime
     cache_item_age_seconds = current_timestamp - cache_item_modification_timestamp
     cache_item_age_hours = cache_item_age_seconds / 60 / 60
 
     if cache_item_age_hours > CACHE_ITEM_TTL:
         logger.info(
-            f"Item cache file {os.path.basename(item_cache_file_path)} is >{math.floor(cache_item_age_hours)} hours old, deleting"
+            "Item cache file %s is >%d hours old, deleting",
+            item_cache_file_path.name,
+            math.floor(cache_item_age_hours),
         )
-        os.remove(item_cache_file_path)
+        item_cache_file_path.unlink()
 
 humanized_execution_duration = humanize.precisedelta(
-    time.time() - current_timestamp, minimum_unit="seconds", format="%.0f"
+    time.time() - current_timestamp,
+    minimum_unit="seconds",
+    format="%.0f",
 )
-logger.info(f"Completed in {humanized_execution_duration}")
+logger.info("Completed in %s", humanized_execution_duration)
 
 # Report success to Better Stack
 if betterstack_heartbeat_url:
-    logger.info(f"Reporting heartbeat to {betterstack_heartbeat_url}")
+    logger.info("Reporting heartbeat to %s", betterstack_heartbeat_url)
     response = requests.get(betterstack_heartbeat_url)
     if not response.ok:
         logger.error("Failed!")
-    logger.info(f"Response: [{response.status_code}]")
+    logger.info("Response: [%d]", response.status_code)
