@@ -70,14 +70,14 @@ try:
         # of transactions for tracing.
         traces_sample_rate=1.0,
     )
-except:
+except OSError:
     pass
 
 # Attempt to load Better Stack heartbeat token
 betterstack_heartbeat_url = None
 try:
     betterstack_heartbeat_url = pathlib.Path(os.path.join(PROJECT_ROOT, "heartbeat.url")).read_text().strip()
-except:
+except OSError:
     pass
 
 # Attempt to set up New Relic
@@ -87,7 +87,7 @@ try:
     # without timeout parameter,
     # the entire script often executes faster than New Relic can initialize itself
     newrelic.agent.register_application(timeout=10)
-except:
+except OSError:
     pass
 
 # Set up logging
@@ -97,7 +97,7 @@ logging.Formatter.converter = time.gmtime
 try:
     # Attempt to initialize Loggly
     logging.config.fileConfig(pathlib.Path(os.path.join(PROJECT_ROOT, "loggly.conf")))
-except:
+except OSError:
     pass
 
 # Set up a customized instance of Requests library
