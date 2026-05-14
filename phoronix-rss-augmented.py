@@ -143,12 +143,12 @@ else:
 # Parse Source RSS
 try:
     source_rss_tree = parse(CACHE_SOURCE_RSS_FILE_PATH)
-except Exception as e:
-    logger.error("Failed to parse %s:", CACHE_SOURCE_RSS_FILE_PATH)
-    logger.error(e)
-    logger.error("\nContents of file:")
-    with CACHE_SOURCE_RSS_FILE_PATH.open(encoding="utf-8") as f:
-        logger.error(f.read())
+except Exception:
+    logger.exception(
+        "Failed to parse %s:\nContents of file:%s",
+        CACHE_SOURCE_RSS_FILE_PATH,
+        CACHE_SOURCE_RSS_FILE_PATH.read_text(encoding="utf-8"),
+    )
     report_failure_and_exit()
 
 # Fix metadata as suggested by RSS validator
