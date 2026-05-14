@@ -94,10 +94,12 @@ logging.Formatter.converter = time.gmtime
 
 if not (sys.gettrace() or "debugpy" in sys.modules):
     # Attempt to initialize Loggly
-    try:
-        logging.config.fileConfig(PROJECT_ROOT / "loggly.conf")
-    except OSError:
-        pass
+    loggly_config_path = PROJECT_ROOT / "loggly.conf"
+    if loggly_config_path.is_file():
+        try:
+            logging.config.fileConfig(loggly_config_path)
+        except OSError:
+            pass
 
     # Attempt to set up New Relic
     try:
