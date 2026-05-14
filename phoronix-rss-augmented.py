@@ -121,6 +121,31 @@ http_adapter = HTTPAdapter(max_retries=request_retry_config)
 requests.mount("http://", http_adapter)
 requests.mount("https://", http_adapter)
 
+# Add realistic headers
+requests.headers.update(
+    {
+        "accept": (
+            "text/html,application/xhtml+xml,application/xml;q=0.9,"
+            "image/avif,image/webp,image/apng,*/*;q=0.8"
+        ),
+        "accept-language": "en-GB,en;q=0.7",
+        "cache-control": "max-age=0",
+        "priority": "u=0, i",
+        "sec-ch-ua": ('"Not A;Brand";v="24", "Chromium";v="174", "Brave";v="174"'),
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": '"Windows"',
+        "sec-fetch-dest": "document",
+        "sec-fetch-mode": "navigate",
+        "sec-fetch-site": "none",
+        "sec-fetch-user": "?1",
+        "sec-gpc": "1",
+        "upgrade-insecure-requests": "1",
+    },
+)
+
+# Initialize cookies
+requests.get(WEBSITE_ROOT_URL)
+
 current_timestamp = time.time()
 
 # Check for Source RSS cache, [re]download if necessary
