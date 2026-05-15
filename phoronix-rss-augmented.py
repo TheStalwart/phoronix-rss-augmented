@@ -43,14 +43,13 @@ OUTPUT_ROOT = PROJECT_ROOT / "output"
 OUTPUT_RSS_FILE_PATH = OUTPUT_ROOT / "phoronix-rss-augmented.xml"
 
 
-def report_failure_and_exit():
+def report_failure():
     if betterstack_heartbeat_url:
         logger.info("Reporting heartbeat to %s/fail", betterstack_heartbeat_url)
         response = requests.get(f"{betterstack_heartbeat_url}/fail")
         if not response.ok:
             logger.error("Failed!")
         logger.info("Response: [%d]", response.status_code)
-    sys.exit(1)
 
 
 def fetch_and_cache(url, cache_path):
@@ -63,7 +62,8 @@ def fetch_and_cache(url, cache_path):
         logger.error(response)
         logger.error("\nResponse.text:")
         logger.error(response.text)
-        report_failure_and_exit()
+        report_failure()
+        return None
     with cache_path.open("w", encoding="utf-8") as f:
         f.write(response.text)
     return response.text
@@ -176,7 +176,8 @@ except Exception:
         CACHE_SOURCE_RSS_FILE_PATH,
         CACHE_SOURCE_RSS_FILE_PATH.read_text(encoding="utf-8"),
     )
-    report_failure_and_exit()
+    report_failure()
+    sys.exit(1)
 
 # Fix metadata as suggested by RSS validator
 # https://www.rssboard.org/rss-validator/
@@ -216,7 +217,13 @@ for item in new_rss_tree.iter("item"):
     if not item_cache_file_path.is_file():
         logger.info("%s cache not found", item_url)
         html_contents = fetch_and_cache(item_url, item_cache_file_path)
-        soup = BeautifulSoup(html_contents, "html.parser")
+
+        if html_contents:
+            soup = BeautifulSoup(html_contents, "html.parser")
+        else:
+            # Failed to fetch linked HTML content,
+            # leave RSS item unmodified
+            continue
     else:
         cache_item_modification_timestamp = item_cache_file_path.stat().st_mtime
         cache_item_age_seconds = current_timestamp - cache_item_modification_timestamp
@@ -229,7 +236,13 @@ for item in new_rss_tree.iter("item"):
                 soup = BeautifulSoup(f, "html.parser")
         else:
             html_contents = fetch_and_cache(item_url, item_cache_file_path)
-            soup = BeautifulSoup(html_contents, "html.parser")
+            if html_contents:
+                soup = BeautifulSoup(html_contents, "html.parser")
+            else:
+                # Failed to refresh linked HTML content,
+                # reuse old cached version
+                with item_cache_file_path.open(encoding="utf-8") as f:
+                    soup = BeautifulSoup(f, "html.parser")
 
     # Extract article
     article_html = soup.find("article")
