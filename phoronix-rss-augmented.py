@@ -37,6 +37,7 @@ CACHE_ROOT = PROJECT_ROOT / "cache"
 CACHE_SOURCE_RSS_FILE_PATH = CACHE_ROOT / "source_rss.xml"
 CACHE_SOURCE_TTL = 55  # minutes
 CACHE_ITEM_TTL = 24  # hours
+CACHE_ITEM_WIPE = 7  # days
 
 # Define output properties
 OUTPUT_ROOT = PROJECT_ROOT / "output"
@@ -356,10 +357,11 @@ for item_cache_file_path in CACHE_ROOT.glob("item_*.html"):
     cache_item_modification_timestamp = item_cache_file_path.stat().st_mtime
     cache_item_age_seconds = current_timestamp - cache_item_modification_timestamp
     cache_item_age_hours = cache_item_age_seconds / 60 / 60
+    cache_item_age_days = cache_item_age_hours / 24
 
-    if cache_item_age_hours > CACHE_ITEM_TTL:
+    if cache_item_age_days > CACHE_ITEM_WIPE:
         logger.info(
-            "Item cache file %s is >%d hours old, deleting",
+            "Item cache file %s is >%d days old, deleting",
             item_cache_file_path.name,
             math.floor(cache_item_age_hours),
         )
