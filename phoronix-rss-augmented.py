@@ -126,13 +126,20 @@ requests.mount("https://", http_adapter)
 # Add realistic headers
 requests.headers.update(
     {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/174.0.0.0 Safari/537.36 Brave/174.0.0.0"
+        ),
         "accept": (
             "text/html,application/xhtml+xml,application/xml;q=0.9,"
             "image/avif,image/webp,image/apng,*/*;q=0.8"
         ),
         "accept-language": "en-GB,en;q=0.7",
         "cache-control": "max-age=0",
+        "connection": "keep-alive",
         "priority": "u=0, i",
+        "referer": "https://www.phoronix.com/",
         "sec-ch-ua": ('"Not A;Brand";v="24", "Chromium";v="174", "Brave";v="174"'),
         "sec-ch-ua-mobile": "?0",
         "sec-ch-ua-platform": '"Windows"',
