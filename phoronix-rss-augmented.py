@@ -153,7 +153,8 @@ requests.headers.update(
 )
 
 # Initialize cookies
-requests.get(WEBSITE_ROOT_URL)
+# Fails with 403?
+# requests.get(f"{WEBSITE_ROOT_URL}/")
 
 current_timestamp = time.time()
 
