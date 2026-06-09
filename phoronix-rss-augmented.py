@@ -16,10 +16,8 @@ import humanize
 import newrelic.agent
 import sentry_sdk
 from bs4 import BeautifulSoup
+from curl_cffi.requests import Session
 from lxml.etree import CDATA, Element, ElementTree, parse
-from requests import Session
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 
 # Source RSS URL
 WEBSITE_ROOT_URL = "https://www.phoronix.com"
@@ -56,18 +54,23 @@ def report_failure():
 def fetch_and_cache(url, cache_path):
     logger.info("Fetching fresh copy of %s", url)
     time.sleep(HTTP_REQUEST_INTERVAL)
-    response = requests.get(url)
-    if not response.ok:
-        logger.error("\nFailed to request content of %s", url)
-        logger.error("\nResponse:")
-        logger.error(response)
-        logger.error("\nResponse.text:")
-        logger.error(response.text)
-        report_failure()
-        return None
-    with cache_path.open("w", encoding="utf-8") as f:
-        f.write(response.text)
-    return response.text
+
+    for attempt in range(HTTP_RETRY_ATTEMPT_COUNT):
+        try:
+            response = requests.get(url, impersonate="chrome146")
+            response.raise_for_status()
+            with cache_path.open("w", encoding="utf-8") as f:
+                f.write(response.text)
+            return response.text
+        except Exception as e:
+            if attempt == HTTP_RETRY_ATTEMPT_COUNT - 1:
+                logger.error("\nFailed to request content of %s", url)
+                logger.error("\nError: %s", e)
+                report_failure()
+                return None
+            wait_time = HTTP_REQUEST_INTERVAL * (2**attempt)
+            logger.warning(f"Request failed, retrying in {wait_time}s: {e}")
+            time.sleep(wait_time)
 
 
 # Init Sentry before doing anything that might raise exception
@@ -116,13 +119,6 @@ if not (sys.gettrace() or "debugpy" in sys.modules):
 # to avoid crashing on monthly DNS resolution failures
 # https://stackoverflow.com/questions/23013220/max-retries-exceeded-with-url-in-requests
 requests = Session()
-request_retry_config = Retry(
-    total=HTTP_RETRY_ATTEMPT_COUNT,
-    backoff_factor=HTTP_REQUEST_INTERVAL,
-)
-http_adapter = HTTPAdapter(max_retries=request_retry_config)
-requests.mount("http://", http_adapter)
-requests.mount("https://", http_adapter)
 
 # Add realistic headers
 requests.headers.update(
