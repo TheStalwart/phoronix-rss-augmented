@@ -18,6 +18,7 @@ import sentry_sdk
 from bs4 import BeautifulSoup
 from curl_cffi.requests import Session
 from lxml.etree import CDATA, Element, ElementTree, parse
+from newrelic.api.exceptions import ConfigurationError
 
 # Source RSS URL
 WEBSITE_ROOT_URL = "https://www.phoronix.com"
@@ -112,7 +113,9 @@ if not (sys.gettrace() or "debugpy" in sys.modules):
         # without timeout parameter,
         # the entire script often executes faster than New Relic can initialize itself
         newrelic.agent.register_application(timeout=10)
-    except OSError:
+    except (OSError, ConfigurationError):
+        # New Relic raises ConfigurationError, not OSError,
+        # when the config is missing in containerized environment.
         pass
 
 # Set up a customized instance of Requests library
