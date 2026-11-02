@@ -1,5 +1,9 @@
-# output file in RSS 2.0 format
+# Source and augmented files in RSS 2.0 format
 *.xml
 
-# a copy of output file i use during development to diff against debug build
+# Landing page copied from the project root during feed generation.
+# This is necessary, to have output/ directory mounted in the container.
+index.html
+
+# A copy of output file i use during development to diff against debug build
 *.xml.old

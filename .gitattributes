@@ -5,3 +5,4 @@ Dockerfile text eol=lf
 *.yml text eol=lf
 *.sh text eol=lf
 *.cron text eol=lf
+*.html text eol=lf

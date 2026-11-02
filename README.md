@@ -2,7 +2,8 @@
 
 Injects full content of [Phoronix](https://www.phoronix.com/) news articles into RSS feed.
 
-Production instance: <https://phoronix.retromultiplayer.com/phoronix-rss-augmented.xml>
+Production page: <https://phoronix.retromultiplayer.com/>
+Production feed: <https://phoronix.retromultiplayer.com/phoronix-rss-augmented.xml>
 
 ## Runtime requirements
 
@@ -54,7 +55,11 @@ chown -R 1000:1000 /mnt/tank/apps/phoronix
 Set `PHORONIX_CACHE_DIR` and `PHORONIX_OUTPUT_DIR` to those host paths
 in the TrueNAS app's Compose environment.
 Caddy can mount the same output directory read-only
-and serve `phoronix-rss-augmented.xml`.
+and serve the entire `output` directory.
+It contains the landing page, augmented RSS feed,
+and the upstream RSS snapshot used for the comparison.
+Caddy can serve that directory as a static site;
+the app itself does not run a web server.
 
 To build and publish a multi-platform image to Docker Hub,
 replace `<dockerhub-user>` with your account:
@@ -104,3 +109,6 @@ To create venv:
 
 To run:
 `.venv/bin/python3 phoronix-rss-augmented.py`
+
+After a successful run, `output/` contains
+`index.html`, `phoronix-rss-augmented.xml`, and `source_rss.xml`.

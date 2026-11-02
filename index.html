@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <meta
+      name="description"
+      content="A fuller Phoronix RSS feed, with each story expanded to include its article."
+    />
+    <title>Phoronix RSS, with the full story</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: "Segoe UI", sans-serif;
+        background: #101719;
+        color: #e8f0ed;
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+        --muted: #9cadaa;
+        --panel: #182224;
+        --line: #304143;
+        --accent: #73e0b2;
+        --added: #9cf0bf;
+        --added-bg: #163d30;
+        --removed: #ffb6ac;
+        --removed-bg: #482724;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        background:
+          radial-gradient(ellipse at 80% -20%, #245044 0, transparent 38rem),
+          #101719;
+        line-height: 1.6;
+      }
+
+      a {
+        color: var(--accent);
+      }
+      a:hover {
+        color: #b7ffdf;
+      }
+
+      .page {
+        width: min(1120px, calc(100% - 40px));
+        margin: 0 auto;
+      }
+
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        padding: 26px 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .brand {
+        color: #e8f0ed;
+        font-weight: 700;
+        text-decoration: none;
+      }
+      .repo-link {
+        color: var(--muted);
+      }
+
+      main {
+        padding: 64px 0 80px;
+      }
+
+      .eyebrow {
+        margin: 0 0 12px;
+        color: var(--accent);
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        max-width: 760px;
+        margin: 0;
+        font-size: clamp(2.4rem, 7vw, 5rem);
+        letter-spacing: -0.055em;
+        line-height: 1.04;
+      }
+
+      .intro {
+        max-width: 650px;
+        margin: 22px 0 0;
+        color: #bbc8c4;
+        font-size: 1.12rem;
+      }
+
+      .subscribe {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        margin: 30px 0 52px;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 9px 16px;
+        border: 1px solid #406357;
+        border-radius: 7px;
+        background: #1b302a;
+        color: #dffff0;
+        font-weight: 650;
+        text-decoration: none;
+      }
+
+      .button.primary {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #10251c;
+      }
+      .button:hover {
+        text-decoration: none;
+        filter: brightness(1.12);
+      }
+      .subscribe-note {
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+
+      h2 {
+        margin: 0 0 8px;
+        font-size: 1.55rem;
+        letter-spacing: -0.02em;
+      }
+      .section-note {
+        margin: 0 0 22px;
+        color: var(--muted);
+      }
+
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin: 22px 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      .legend span {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .swatch {
+        width: 12px;
+        height: 12px;
+        border-radius: 3px;
+      }
+      .swatch.added {
+        background: var(--added-bg);
+        border: 1px solid var(--added);
+      }
+      .swatch.removed {
+        background: var(--removed-bg);
+        border: 1px solid var(--removed);
+      }
+
+      #status {
+        color: var(--muted);
+      }
+      #status.error {
+        color: var(--removed);
+      }
+      #diff-list {
+        display: grid;
+        gap: 16px;
+      }
+
+      .story {
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--panel);
+      }
+
+      .story-heading {
+        padding: 17px 20px;
+        border-bottom: 1px solid var(--line);
+      }
+      .story-heading h3 {
+        margin: 0;
+        font-size: 1.08rem;
+        line-height: 1.4;
+      }
+      .story-heading a {
+        color: #e8f0ed;
+        text-decoration: none;
+      }
+      .story-heading a:hover {
+        color: var(--accent);
+      }
+      .story-meta {
+        margin: 5px 0 0;
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+
+      .columns {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+      .column {
+        min-width: 0;
+        padding: 16px 20px 20px;
+      }
+      .column + .column {
+        border-left: 1px solid var(--line);
+      }
+      .column h4 {
+        margin: 0 0 10px;
+        color: var(--muted);
+        font-size: 0.76rem;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+      }
+      .diff-text {
+        margin: 0;
+        color: #d4dfdb;
+        font-size: 0.94rem;
+        overflow-wrap: anywhere;
+        white-space: pre-wrap;
+      }
+      del {
+        border-radius: 3px;
+        background: var(--removed-bg);
+        color: var(--removed);
+        text-decoration-color: #ff8678;
+      }
+      ins {
+        border-radius: 3px;
+        background: var(--added-bg);
+        color: var(--added);
+        text-decoration: none;
+      }
+
+      footer {
+        padding: 22px 0 34px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+
+      @media (max-width: 700px) {
+        .page {
+          width: min(100% - 28px, 1120px);
+        }
+        header {
+          align-items: flex-start;
+        }
+        main {
+          padding-top: 45px;
+        }
+        .columns {
+          grid-template-columns: 1fr;
+        }
+        .column + .column {
+          border-top: 1px solid var(--line);
+          border-left: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <a class="brand" href="./">Phoronix RSS Augmented</a>
+        <a
+          class="repo-link"
+          href="https://github.com/TheStalwart/phoronix-rss-augmented"
+          target="_blank"
+          rel="noreferrer"
+          >View the project on GitHub</a
+        >
+      </header>
+
+      <main>
+        <p class="eyebrow">Phoronix news, without the click-through</p>
+        <h1>The full story, right in your feed.</h1>
+        <p class="intro">
+          This project takes the original Phoronix RSS feed and expands each
+          story with its full article. Compare the upstream summaries with the
+          augmented articles below.
+        </p>
+
+        <nav class="subscribe" aria-label="Subscribe to the augmented feed">
+          <a
+            class="button primary"
+            id="feed-link"
+            href="./phoronix-rss-augmented.xml"
+            >Open the RSS feed</a
+          >
+          <a
+            class="button"
+            id="feedly-link"
+            href="https://feedly.com/i/subscription/feed/https%3A%2F%2Fphoronix.retromultiplayer.com%2Fphoronix-rss-augmented.xml"
+            target="_blank"
+            rel="noreferrer"
+            >Add to Feedly</a
+          >
+          <a
+            class="button"
+            id="inoreader-link"
+            href="https://www.inoreader.com/?add_feed=https%3A%2F%2Fphoronix.retromultiplayer.com%2Fphoronix-rss-augmented.xml"
+            target="_blank"
+            rel="noreferrer"
+            >Add to Inoreader</a
+          >
+          <a
+            class="button"
+            id="newsblur-link"
+            href="https://www.newsblur.com/?url=https%3A%2F%2Fphoronix.retromultiplayer.com%2Fphoronix-rss-augmented.xml"
+            target="_blank"
+            rel="noreferrer"
+            >Add to NewsBlur</a
+          >
+          <span class="subscribe-note"
+            >Or copy the feed URL into any RSS reader.</span
+          >
+        </nav>
+
+        <section aria-labelledby="diff-title">
+          <h2 id="diff-title">What changes in each story</h2>
+          <p class="section-note">
+            The diff compares the text in each upstream description with the
+            expanded article. Stories are matched by their feed link.
+          </p>
+          <div class="legend" aria-label="Diff colors">
+            <span
+              ><i class="swatch removed" aria-hidden="true"></i> Removed from
+              the short description</span
+            >
+            <span
+              ><i class="swatch added" aria-hidden="true"></i> Added in the full
+              article</span
+            >
+          </div>
+          <p id="status" role="status" aria-live="polite">
+            Loading feed comparison…
+          </p>
+          <div id="diff-list"></div>
+        </section>
+      </main>
+
+      <footer>
+        The source snapshot is refreshed when the augmented feed is generated.
+        <a href="./source_rss.xml">View the upstream RSS snapshot</a>.
+      </footer>
+    </div>
+
+    <script>
+      const status = document.querySelector("#status");
+      const diffList = document.querySelector("#diff-list");
+      const feedUrl = new URL(
+        "./phoronix-rss-augmented.xml",
+        window.location.href,
+      ).href;
+      document.querySelector("#feed-link").href = feedUrl;
+      document.querySelector("#feedly-link").href =
+        `https://feedly.com/i/subscription/feed/${encodeURIComponent(feedUrl)}`;
+      document.querySelector("#inoreader-link").href =
+        `https://www.inoreader.com/?add_feed=${encodeURIComponent(feedUrl)}`;
+      document.querySelector("#newsblur-link").href =
+        `https://www.newsblur.com/?url=${encodeURIComponent(feedUrl)}`;
+
+      function parseFeed(xml, name) {
+        const documentXml = new DOMParser().parseFromString(
+          xml,
+          "application/xml",
+        );
+        if (documentXml.querySelector("parsererror")) {
+          throw new Error(`${name} is not valid XML.`);
+        }
+
+        return [...documentXml.querySelectorAll("channel > item")].map(
+          (item) => ({
+            title:
+              item.querySelector("title")?.textContent?.trim() ||
+              "Untitled story",
+            link: item.querySelector("link")?.textContent?.trim() || "",
+            description: item.querySelector("description")?.textContent || "",
+          }),
+        );
+      }
+
+      function descriptionText(description) {
+        const withParagraphBreaks = description
+          .replace(/<br\s*\/?>/gi, " ")
+          .replace(/<\/(?:p|div|li|h[1-6]|article|blockquote)>/gi, " ");
+        const parsed = new DOMParser().parseFromString(
+          withParagraphBreaks,
+          "text/html",
+        );
+        return (parsed.body.textContent || "").replace(/\s+/g, " ").trim();
+      }
+
+      function makeDiff(oldText, newText) {
+        const oldTokens = oldText.match(/\S+|\s+/g) || [];
+        const newTokens = newText.match(/\S+|\s+/g) || [];
+        const rows = oldTokens.length + 1;
+        const columns = newTokens.length + 1;
+        const oldParts = [];
+        const newParts = [];
+
+        if (rows * columns > 1000000) {
+          return {
+            oldParts: oldTokens.map((text) => ["removed", text]),
+            newParts: newTokens.map((text) => ["added", text]),
+          };
+        }
+
+        const table = new Uint32Array(rows * columns);
+        for (
+          let oldIndex = oldTokens.length - 1;
+          oldIndex >= 0;
+          oldIndex -= 1
+        ) {
+          for (
+            let newIndex = newTokens.length - 1;
+            newIndex >= 0;
+            newIndex -= 1
+          ) {
+            const current = oldIndex * columns + newIndex;
+            if (oldTokens[oldIndex] === newTokens[newIndex]) {
+              table[current] =
+                table[(oldIndex + 1) * columns + newIndex + 1] + 1;
+            } else {
+              table[current] = Math.max(
+                table[(oldIndex + 1) * columns + newIndex],
+                table[oldIndex * columns + newIndex + 1],
+              );
+            }
+          }
+        }
+
+        let oldIndex = 0;
+        let newIndex = 0;
+        while (oldIndex < oldTokens.length || newIndex < newTokens.length) {
+          if (
+            oldIndex < oldTokens.length &&
+            newIndex < newTokens.length &&
+            oldTokens[oldIndex] === newTokens[newIndex]
+          ) {
+            oldParts.push(["same", oldTokens[oldIndex]]);
+            newParts.push(["same", newTokens[newIndex]]);
+            oldIndex += 1;
+            newIndex += 1;
+          } else if (
+            oldIndex < oldTokens.length &&
+            (newIndex === newTokens.length ||
+              table[(oldIndex + 1) * columns + newIndex] >=
+                table[oldIndex * columns + newIndex + 1])
+          ) {
+            oldParts.push(["removed", oldTokens[oldIndex]]);
+            oldIndex += 1;
+          } else {
+            newParts.push(["added", newTokens[newIndex]]);
+            newIndex += 1;
+          }
+        }
+
+        return { oldParts, newParts };
+      }
+
+      function appendDiff(container, parts) {
+        const fragment = document.createDocumentFragment();
+        let runKind = null;
+        let runText = "";
+
+        function flushRun() {
+          if (!runText) return;
+          if (runKind === "same") {
+            fragment.append(document.createTextNode(runText));
+          } else {
+            const marker = document.createElement(
+              runKind === "removed" ? "del" : "ins",
+            );
+            marker.textContent = runText;
+            fragment.append(marker);
+          }
+          runText = "";
+        }
+
+        for (const [kind, text] of parts) {
+          if (kind !== runKind) {
+            flushRun();
+            runKind = kind;
+          }
+          runText += text;
+        }
+        flushRun();
+        container.append(fragment);
+      }
+
+      function safeStoryLink(link) {
+        try {
+          const url = new URL(link);
+          return url.protocol === "http:" || url.protocol === "https:"
+            ? url.href
+            : "";
+        } catch {
+          return "";
+        }
+      }
+
+      function renderStory(upstream, augmented) {
+        const oldText = descriptionText(upstream?.description || "");
+        const newText = descriptionText(augmented?.description || "");
+        const { oldParts, newParts } = makeDiff(oldText, newText);
+        const story = document.createElement("article");
+        story.className = "story";
+
+        const heading = document.createElement("div");
+        heading.className = "story-heading";
+        const title = document.createElement("h3");
+        const titleLink = safeStoryLink(
+          augmented?.link || upstream?.link || "",
+        );
+        if (titleLink) {
+          const anchor = document.createElement("a");
+          anchor.href = titleLink;
+          anchor.target = "_blank";
+          anchor.rel = "noreferrer";
+          anchor.textContent =
+            augmented?.title || upstream?.title || "Untitled story";
+          title.append(anchor);
+        } else {
+          title.textContent =
+            augmented?.title || upstream?.title || "Untitled story";
+        }
+        heading.append(title);
+
+        const meta = document.createElement("p");
+        meta.className = "story-meta";
+        meta.textContent = `${oldText.length.toLocaleString()} upstream characters compared with ${newText.length.toLocaleString()} augmented characters`;
+        heading.append(meta);
+        story.append(heading);
+
+        const columns = document.createElement("div");
+        columns.className = "columns";
+        for (const [label, parts] of [
+          ["Upstream description", oldParts],
+          ["Augmented article", newParts],
+        ]) {
+          const column = document.createElement("section");
+          column.className = "column";
+          const headingText = document.createElement("h4");
+          headingText.textContent = label;
+          const text = document.createElement("p");
+          text.className = "diff-text";
+          appendDiff(text, parts);
+          column.append(headingText, text);
+          columns.append(column);
+        }
+        story.append(columns);
+        return story;
+      }
+
+      async function loadComparison() {
+        try {
+          const [sourceResponse, augmentedResponse] = await Promise.all([
+            fetch("./source_rss.xml"),
+            fetch("./phoronix-rss-augmented.xml"),
+          ]);
+          if (!sourceResponse.ok || !augmentedResponse.ok) {
+            throw new Error(
+              "The feed files could not be loaded. Try again after the next feed update.",
+            );
+          }
+
+          const [sourceXml, augmentedXml] = await Promise.all([
+            sourceResponse.text(),
+            augmentedResponse.text(),
+          ]);
+          const upstreamItems = parseFeed(sourceXml, "The upstream snapshot");
+          const augmentedItems = parseFeed(augmentedXml, "The augmented feed");
+          const upstreamByLink = new Map(
+            upstreamItems.map((item) => [item.link, item]),
+          );
+          const matchedLinks = new Set();
+          const stories = augmentedItems.map((item) => {
+            matchedLinks.add(item.link);
+            return renderStory(upstreamByLink.get(item.link), item);
+          });
+
+          for (const item of upstreamItems) {
+            if (!matchedLinks.has(item.link)) {
+              stories.push(renderStory(item, null));
+            }
+          }
+          diffList.replaceChildren(...stories);
+          status.textContent = `${augmentedItems.length} stories compared.`;
+        } catch (error) {
+          status.classList.add("error");
+          status.textContent = `Unable to show the feed comparison: ${error.message}`;
+        }
+      }
+
+      loadComparison();
+    </script>
+  </body>
+</html>

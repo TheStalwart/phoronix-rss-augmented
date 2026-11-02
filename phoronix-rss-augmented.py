@@ -8,6 +8,7 @@ import logging
 import logging.config
 import math
 import re
+import shutil
 import sys
 import time
 from pathlib import Path
@@ -41,6 +42,8 @@ CACHE_ITEM_WIPE = 7  # days
 # Define output properties
 OUTPUT_ROOT = PROJECT_ROOT / "output"
 OUTPUT_RSS_FILE_PATH = OUTPUT_ROOT / "phoronix-rss-augmented.xml"
+OUTPUT_SOURCE_RSS_FILE_PATH = OUTPUT_ROOT / "source_rss.xml"
+OUTPUT_INDEX_FILE_PATH = OUTPUT_ROOT / "index.html"
 
 
 def report_failure():
@@ -349,6 +352,8 @@ logger.info("---")
 
 # Output augmented RSS file
 new_rss_tree.write(OUTPUT_RSS_FILE_PATH, encoding="utf-8", xml_declaration=True)
+shutil.copyfile(CACHE_SOURCE_RSS_FILE_PATH, OUTPUT_SOURCE_RSS_FILE_PATH)
+shutil.copyfile(PROJECT_ROOT / "index.html", OUTPUT_INDEX_FILE_PATH)
 
 # Clean up old item cache files
 current_time = time.time()

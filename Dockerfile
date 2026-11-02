@@ -13,6 +13,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY phoronix-rss-augmented.py .
+COPY index.html .
 COPY docker/phoronix.cron /usr/local/share/phoronix.cron
 COPY docker/entrypoint.sh /usr/local/bin/container-entrypoint
 
