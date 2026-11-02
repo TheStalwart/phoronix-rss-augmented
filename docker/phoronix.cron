@@ -1,0 +1,4 @@
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+45 * * * * root flock -n /tmp/phoronix-rss-augmented.lock su -s /bin/sh app -c 'cd /app && exec python /app/phoronix-rss-augmented.py' >> /proc/1/fd/1 2>&1

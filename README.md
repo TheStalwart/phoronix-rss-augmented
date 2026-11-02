@@ -33,6 +33,68 @@ or symlinked with `systemctl link /home/phoronix/phoronix-rss-augmented/systemd/
 
 Enable cronjob with `systemctl enable --now phoronix.timer`
 
+## Container deployment
+
+The container runs the refresh using cron at 45 minutes past every hour,
+matching `systemd/phoronix.timer`.
+The job runs as UID/GID `1000`;
+cron runs as root only to launch the job as that unprivileged user.
+No web server is included.
+
+The Compose file persists `cache` and `output` on the host.
+Create those directories and make them writable by UID/GID `1000`
+before starting the container.
+For example, on TrueNAS:
+
+```sh
+mkdir -p /mnt/tank/apps/phoronix/cache /mnt/tank/apps/phoronix/output
+chown -R 1000:1000 /mnt/tank/apps/phoronix
+```
+
+Set `PHORONIX_CACHE_DIR` and `PHORONIX_OUTPUT_DIR` to those host paths
+in the TrueNAS app's Compose environment.
+Caddy can mount the same output directory read-only
+and serve `phoronix-rss-augmented.xml`.
+
+To build and publish a multi-platform image to Docker Hub,
+replace `<dockerhub-user>` with your account:
+
+```sh
+docker login
+docker buildx build --platform linux/amd64,linux/arm64 \
+  --tag <dockerhub-user>/phoronix-rss-augmented:latest --push .
+```
+
+### Automatic publishing with GitHub Actions
+
+The `Publish Docker image` workflow builds and publishes
+`linux/amd64` and `linux/arm64` images
+on every push to `main` or `master`.
+Add these Actions secrets in the repository settings:
+
+- `DOCKERHUB_USERNAME`: Docker Hub username
+- `DOCKERHUB_TOKEN`: Docker Hub access token with permission to push images
+
+Each successful run updates the `latest` tag
+and publishes an immutable tag for that commit's full SHA.
+
+Set `PHORONIX_IMAGE`
+to `<dockerhub-user>/phoronix-rss-augmented:latest` in TrueNAS.
+In the Compose configuration, keep the `cache` and `output` bind mounts
+and set their host paths as above.
+The default cron schedule is in `docker/phoronix.cron`; to change it,
+set `PHORONIX_CRONTAB_FILE` to the host path of your schedule file.
+It is mounted read-only at `/config/phoronix.cron`
+and installed with the permissions cron requires.
+The default relative path works when deploying from a checkout;
+otherwise, copy `docker/phoronix.cron` to a host dataset
+and set `PHORONIX_CRONTAB_FILE` to its absolute path.
+Keep the cron.d format (including the `root` user field).
+
+Optional integration files
+(`sentry.dsn`, `heartbeat.url`, `loggly.conf`, and `newrelic.ini`)
+can be mounted read-only at the same paths under `/app`.
+
 ## Development environment
 
 ### venv-based

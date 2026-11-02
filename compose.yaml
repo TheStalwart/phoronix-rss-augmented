@@ -1,0 +1,18 @@
+services:
+  phoronix-rss-augmented:
+    image: ${PHORONIX_IMAGE:?Set PHORONIX_IMAGE to your published Docker Hub image}
+    restart: unless-stopped
+    init: true
+    volumes:
+      - type: bind
+        source: ${PHORONIX_CACHE_DIR:-./data/cache}
+        target: /app/cache
+      - type: bind
+        source: ${PHORONIX_OUTPUT_DIR:-./data/output}
+        target: /app/output
+      - type: bind
+        source: ${PHORONIX_CRONTAB_FILE:-./docker/phoronix.cron}
+        target: /config/phoronix.cron
+        read_only: true
+        bind:
+          create_host_path: false
