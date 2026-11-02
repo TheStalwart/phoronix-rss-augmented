@@ -6,6 +6,9 @@ if [ -r /config/phoronix.cron ]; then
     cron_file=/config/phoronix.cron
 fi
 
+# Besides the convenience of seeing the cron configuration in the logs,
+# this also serves as a workaround for TrueNAS WebUI
+# displaying an endless spinner when a container starts with no output.
 printf 'Loaded cron configuration from %s:\n' "$cron_file"
 cat "$cron_file"
 
