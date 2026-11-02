@@ -2,8 +2,8 @@
 
 Injects full content of [Phoronix](https://www.phoronix.com/) news articles into RSS feed.
 
-Production page: <https://phoronix.retromultiplayer.com/>
-Production feed: <https://phoronix.retromultiplayer.com/phoronix-rss-augmented.xml>
+- Production page: <https://phoronix.retromultiplayer.com/>
+- Production feed: <https://phoronix.retromultiplayer.com/phoronix-rss-augmented.xml>
 
 ## Runtime requirements
 
