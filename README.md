@@ -38,7 +38,7 @@ Enable cronjob with `systemctl enable --now phoronix.timer`
 ### venv-based
 
 To create venv:
-`python3 -m venv .venv && .venv/bin/pip install --upgrade -r requirements.txt`
+`python3 -m venv .venv && .venv/bin/pip install --upgrade --upgrade-strategy eager -r requirements.txt`
 
 To run:
 `.venv/bin/python3 phoronix-rss-augmented.py`
