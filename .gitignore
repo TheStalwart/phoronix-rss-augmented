@@ -1,10 +1,5 @@
 .venv/
 
-sentry.dsn
-heartbeat.url
-loggly.conf
-newrelic.ini
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

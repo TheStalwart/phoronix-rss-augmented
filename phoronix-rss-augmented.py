@@ -31,6 +31,7 @@ HTTP_RETRY_ATTEMPT_COUNT = 5
 
 # Define file paths
 PROJECT_ROOT = Path(__file__).parent.resolve()
+CONFIG_ROOT = PROJECT_ROOT / "config"
 
 # Define cache properties
 CACHE_ROOT = PROJECT_ROOT / "cache"
@@ -80,7 +81,7 @@ def fetch_and_cache(url, cache_path):
 # Init Sentry before doing anything that might raise exception
 try:
     sentry_sdk.init(
-        dsn=(PROJECT_ROOT / "sentry.dsn").read_text().strip(),
+        dsn=(CONFIG_ROOT / "sentry.dsn").read_text().strip(),
         # Set traces_sample_rate to 1.0 to capture 100%
         # of transactions for tracing.
         traces_sample_rate=1.0,
@@ -91,7 +92,7 @@ except OSError:
 # Attempt to load Better Stack heartbeat token
 betterstack_heartbeat_url = None
 try:
-    betterstack_heartbeat_url = (PROJECT_ROOT / "heartbeat.url").read_text().strip()
+    betterstack_heartbeat_url = (CONFIG_ROOT / "heartbeat.url").read_text().strip()
 except OSError:
     pass
 
@@ -102,7 +103,7 @@ logging.Formatter.converter = time.gmtime
 
 if not (sys.gettrace() or "debugpy" in sys.modules):
     # Attempt to initialize Loggly
-    loggly_config_path = PROJECT_ROOT / "loggly.conf"
+    loggly_config_path = CONFIG_ROOT / "loggly.conf"
     if loggly_config_path.is_file():
         try:
             logging.config.fileConfig(loggly_config_path)
@@ -111,7 +112,7 @@ if not (sys.gettrace() or "debugpy" in sys.modules):
 
     # Attempt to set up New Relic
     try:
-        newrelic.agent.initialize(PROJECT_ROOT / "newrelic.ini")
+        newrelic.agent.initialize(CONFIG_ROOT / "newrelic.ini")
 
         # without timeout parameter,
         # the entire script often executes faster than New Relic can initialize itself

@@ -5,8 +5,4 @@ __pycache__
 
 cache/*
 output/*
-
-sentry.dsn
-heartbeat.url
-loggly.conf
-newrelic.ini
+config/*
