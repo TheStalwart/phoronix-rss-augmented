@@ -34,6 +34,19 @@ or symlinked with `systemctl link /home/phoronix/phoronix-rss-augmented/systemd/
 
 Enable cronjob with `systemctl enable --now phoronix.timer`
 
+To uninstall the timer and service:
+
+```sh
+sudo systemctl disable --now phoronix.timer
+sudo systemctl stop phoronix.service
+sudo rm /etc/systemd/system/phoronix.timer /etc/systemd/system/phoronix.service
+sudo systemctl daemon-reload
+sudo systemctl reset-failed
+```
+
+This removes the installed unit files or symlinks, not the originals in this
+repository. Stopping the service also stops a run that is currently in progress.
+
 ## Container deployment
 
 The container runs the refresh using cron at 45 minutes past every hour,
